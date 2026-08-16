@@ -1,9 +1,0 @@
-services:
-  cs2-2d-demo-viewer:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: cs2-2d-demo-viewer
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
