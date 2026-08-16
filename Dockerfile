@@ -14,7 +14,7 @@ RUN apk add --no-cache patch \
 # ==========================================================================
 # Stage 2: WASM-Parser + Server-Binary bauen (Go)
 # ==========================================================================
-FROM golang:1.22 AS go-builder
+FROM golang:1.25 AS go-builder
 
 WORKDIR /src
 COPY --from=source /src .
