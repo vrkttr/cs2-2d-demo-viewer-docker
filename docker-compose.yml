@@ -1,0 +1,13 @@
+services:
+  demo-viewer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: demo-viewer
+    restart: unless-stopped
+    environment:
+      # Kommagetrennte Liste eigener Hosts, deren Demo-URLs der Proxy
+      # zusaetzlich zu den fest einprogrammierten Faceit-Hosts akzeptiert.
+      - EXTRA_ALLOWED_HOSTS=cs2.stinky-ol-looters.de
+    ports:
+      - "8081:8080"   # links: Host-Port frei waehlbar

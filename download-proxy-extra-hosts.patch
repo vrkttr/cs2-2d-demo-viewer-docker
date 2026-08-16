@@ -1,0 +1,63 @@
+diff --git a/server/download.go b/server/download.go
+index e161bbe..3d05d5b 100644
+--- a/server/download.go
++++ b/server/download.go
+@@ -148,37 +148,41 @@ func secureDemoUrl(urlParam string, isDev bool) (string, error) {
+ 		return urlParam, nil
+ 	}
+ 
+-	// Production mode: only allow https and strict whitelist of allowed hosts
++	// Production mode: only allow https
+ 	if parsedURL.Scheme != "https" {
+ 		logger.Warn("Production mode: forbidden scheme", zap.String("scheme", parsedURL.Scheme))
+ 		return "", fmt.Errorf("production mode: only https scheme allowed, got: %s", parsedURL.Scheme)
+ 	}
+-	allowedHosts := []string{
++
++	// Faceit hosts: unveraendertes Originalverhalten, URL wird auf das
++	// feste Faceit-Muster (.dem.zst, extrahierte Match-ID) umgeschrieben.
++	faceitHosts := []string{
+ 		"demos-europe-central-faceit-cdn.s3.eu-central-003.backblazeb2.com",
+ 		"demos-us-east-faceit-cdn.s3.us-east-005.backblazeb2.com",
+ 	}
+ 
+-	// Check that the host is in the allowed list
+-	allowed := false
+-	hostId := -1
+-	for i, host := range allowedHosts {
++	for _, host := range faceitHosts {
+ 		if host == parsedURL.Host {
+-			allowed = true
+-			hostId = i
+-			break
++			matchId := extractMatchId(parsedURL.Path)
++			if matchId == "" {
++				return "", fmt.Errorf("no match id found in path %s", parsedURL.Path)
++			}
++			return fmt.Sprintf("https://%s/cs2/%s.dem.zst?%s", host, matchId, parsedURL.RawQuery), nil
+ 		}
+ 	}
+-	if !allowed {
+-		logger.Warn("Forbidden host", zap.String("host", parsedURL.Host))
+-		return "", fmt.Errorf("forbidden host %v", parsedURL.Host)
+-	}
+ 
+-	matchId := extractMatchId(parsedURL.Path)
+-	if matchId == "" {
+-		return "", fmt.Errorf("no match id found in path %s", parsedURL.Path)
++	// Zusaetzliche, per ENV konfigurierbare eigene Hosts (z. B. eigener
++	// Demo-Server). Die Original-URL wird unveraendert durchgereicht,
++	// kein Faceit-spezifisches Rewriting.
++	for extraHost := range strings.SplitSeq(os.Getenv("EXTRA_ALLOWED_HOSTS"), ",") {
++		extraHost = strings.TrimSpace(extraHost)
++		if extraHost != "" && extraHost == parsedURL.Host {
++			return parsedURL.String(), nil
++		}
+ 	}
+ 
+-	return fmt.Sprintf("https://%s/cs2/%s.dem.zst?%s", allowedHosts[hostId], matchId, parsedURL.RawQuery), nil
++	logger.Warn("Forbidden host", zap.String("host", parsedURL.Host))
++	return "", fmt.Errorf("forbidden host %v", parsedURL.Host)
+ }
+ 
+ // extractMatchId extracts the match ID from a demo URL path
