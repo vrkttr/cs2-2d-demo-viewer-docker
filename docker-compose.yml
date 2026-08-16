@@ -1,0 +1,16 @@
+services:
+  cs2-2d-demo-viewer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        REPO_URL: https://github.com/sparkoo/csgo-2d-demo-viewer.git
+        REPO_BRANCH: dev
+
+    image: cs2-2d-demo-viewer:latest
+    container_name: cs2-2d-demo-viewer
+
+    restart: unless-stopped
+
+    ports:
+      - "8080:8080"
