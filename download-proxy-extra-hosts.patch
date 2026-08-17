@@ -1,8 +1,31 @@
 diff --git a/server/download.go b/server/download.go
-index e161bbe..3d05d5b 100644
+index e161bbe..aa72d50 100644
 --- a/server/download.go
 +++ b/server/download.go
-@@ -148,37 +148,41 @@ func secureDemoUrl(urlParam string, isDev bool) (string, error) {
+@@ -91,7 +91,21 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
+ 
+ 	w.Header().Set("Content-Type", resp.Header.Get("Content-Type"))
+ 	matchId := extractMatchId(demoUrl)
+-	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.dem.zst"`, matchId))
++
++	// Extension anhand der tatsächlichen Quelle bestimmen statt immer
++	// ".dem.zst" zu erzwingen. Der WASM-Parser entscheidet rein anhand
++	// dieser Dateiendung, ob und wie dekomprimiert werden muss - bei
++	// eigenen (unkomprimierten) Demo-Quellen wuerde ein erzwungenes
++	// ".dem.zst" die Datei faelschlich durch die zstd-Dekompression
++	// schicken und sie damit zerstoeren.
++	ext := ".dem"
++	for _, candidate := range []string{".dem.zst", ".dem.gz", ".dem.bz2", ".dem"} {
++		if strings.HasSuffix(demoUrl, candidate) {
++			ext = candidate
++			break
++		}
++	}
++	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s%s"`, matchId, ext))
+ 	if contentLength := resp.Header.Get("Content-Length"); contentLength != "" {
+ 		w.Header().Set("X-Demo-Length", contentLength)
+ 	}
+@@ -148,37 +162,41 @@ func secureDemoUrl(urlParam string, isDev bool) (string, error) {
  		return urlParam, nil
  	}
  
