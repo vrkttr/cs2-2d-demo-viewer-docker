@@ -6,8 +6,28 @@ services:
     container_name: demo-viewer
     restart: unless-stopped
     environment:
-      # Kommagetrennte Liste eigener Hosts, deren Demo-URLs der Proxy
-      # zusaetzlich zu den fest einprogrammierten Faceit-Hosts akzeptiert.
+      # Comma-separated list of your own hosts the proxy should accept
+      # in addition to the hardcoded Faceit hosts.
       - EXTRA_ALLOWED_HOSTS=cs2.stinky-ol-looters.de
+    # No "ports:" here anymore - only reachable internally via Caddy,
+    # no longer exposed directly on 8080.
+    expose:
+      - "8080"
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: demo-viewer-caddy
+    restart: unless-stopped
     ports:
-      - "8080:8080"   # links: Host-Port frei waehlbar
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - demo-viewer
+
+volumes:
+  caddy_data:
+  caddy_config:
