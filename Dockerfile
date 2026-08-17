@@ -23,6 +23,12 @@ COPY --from=source /src .
 # genau wie im README dokumentiert (von Repo-Root aus).
 RUN make wasm
 
+# Workaround fuer einen Pfad-Bug im Makefile: "cp ... ../web/public/wasm/wasm_exec.js"
+# laeuft ohne das "-C ./parser", das der go-build-Aufruf davor nutzt, und landet
+# dadurch ausserhalb des Repos statt in web/public/wasm/. Datei hier an die
+# richtige Stelle kopieren.
+RUN cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" web/public/wasm/wasm_exec.js
+
 # Server-Binary bauen
 RUN cd server && go build -ldflags="-s -w" -o /out/server-bin .
 
