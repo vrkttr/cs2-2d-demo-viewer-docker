@@ -1,0 +1,3 @@
+cs2-demo.stinky-ol-looters.de {
+    reverse_proxy demo-viewer:8080
+}
